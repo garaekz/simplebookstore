@@ -1,4 +1,8 @@
-import { BadRequestException } from '@nestjs/common/exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common/exceptions';
 import {
   Controller,
   Get,
@@ -38,21 +42,81 @@ export class BooksController {
 
   @Get()
   async findAll() {
-    return this.booksService.findAll();
+    try {
+      const books = await this.booksService.findAll();
+      return {
+        statusCode: 200,
+        message: 'Books retrieved successfully',
+        data: books,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.booksService.findOne(id);
+    try {
+      const book = await this.booksService.findOneById(id);
+      return {
+        statusCode: 200,
+        message: 'Book retrieved successfully',
+        data: book,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateBookDto: UpdateBookDto) {
-    return this.booksService.update(id, updateBookDto);
+    try {
+      const book = await this.booksService.update(id, updateBookDto);
+
+      if (!book) {
+        throw new NotFoundException('Book not found');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Book updated successfully',
+        data: book,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error(error);
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.booksService.remove(id);
+    try {
+      const book = await this.booksService.remove(id);
+
+      if (!book) {
+        throw new NotFoundException('Book not found');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Book deleted successfully',
+        data: book,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 }

@@ -3,10 +3,10 @@ import { BooksService } from './books.service';
 import { BooksController } from './books.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Book, BookSchema } from './schemas/book.schema';
-import { AuthorsService } from 'src/authors/authors.service';
-import { GenresService } from 'src/genres/genres.service';
-import { Author, AuthorSchema } from 'src/authors/schemas/author.schema';
-import { Genre, GenreSchema } from 'src/genres/schemas/genre.schema';
+import { AuthorsService } from '../authors/authors.service';
+import { GenresService } from '../genres/genres.service';
+import { Author, AuthorSchema } from '../authors/schemas/author.schema';
+import { Genre, GenreSchema } from '../genres/schemas/genre.schema';
 
 @Module({
   imports: [

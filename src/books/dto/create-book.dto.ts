@@ -35,5 +35,5 @@ export class CreateBookDto {
 
   @IsOptional()
   @IsNumber()
-  discount: number;
+  discount?: number;
 }
