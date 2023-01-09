@@ -7,7 +7,11 @@ import { Genre } from '../genres/schemas/genre.schema';
 import { BookDocument } from './schemas/book.schema';
 import { GenresService } from '../genres/genres.service';
 import { AuthorsService } from '../authors/authors.service';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateBookDto } from './dto/update-book.dto';
 
 const createBookDto = {
@@ -48,36 +52,9 @@ describe('BooksController', () => {
           provide: BooksService,
           useValue: {
             findOneByTitle: jest.fn(),
-            create: jest.fn().mockImplementation((data) => {
-              if (data.authors[0] !== 'aRandomAuthorId') {
-                return Promise.reject(
-                  new BadRequestException('One or more authors are invalid'),
-                );
-              }
-              if (data.genres[0] !== 'aRandomGenreId') {
-                return Promise.reject(
-                  new BadRequestException('One or more genres are invalid'),
-                );
-              }
-              return Promise.resolve({
-                ...data,
-                authors: [new Author()],
-                genres: [new Genre()],
-                discount: 0,
-              } as BookDocument);
-            }),
+            create: jest.fn(),
             findAll: jest.fn(),
-            findOneById: jest.fn().mockImplementation((id) => {
-              if (id === 'aGoodBookId') {
-                return Promise.resolve({
-                  ...createBookDto,
-                  authors: [new Author()],
-                  genres: [new Genre()],
-                  discount: 0,
-                } as BookDocument);
-              }
-              return Promise.reject(new NotFoundException('Book not found'));
-            }),
+            findOneById: jest.fn(),
             update: jest.fn(),
             remove: jest.fn(),
           },
@@ -121,7 +98,7 @@ describe('BooksController', () => {
     it('should not create a book if it already exists', async () => {
       jest
         .spyOn(service, 'findOneByTitle')
-        .mockRejectedValue(new BadRequestException('Book already exists'));
+        .mockResolvedValue({} as BookDocument);
       try {
         await controller.create(createBookDto);
       } catch (error) {
@@ -197,6 +174,20 @@ describe('BooksController', () => {
         data: [],
       });
     });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'findAll')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+      try {
+        await controller.findAll();
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toEqual('Something went wrong');
+      }
+    });
   });
 
   describe('findOne', () => {
@@ -217,14 +208,27 @@ describe('BooksController', () => {
 
     it('should throw an error if no book is found', async () => {
       jest
-        .spyOn(service, 'findOneByTitle')
+        .spyOn(service, 'findOneById')
         .mockRejectedValue(new NotFoundException('Book not found'));
       try {
         await controller.findOne('someRandomBookId');
       } catch (error) {
-        console.error(error);
         expect(error).toBeInstanceOf(NotFoundException);
         expect(error.message).toEqual('Book not found');
+      }
+    });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'findOneById')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+      try {
+        await controller.findOne('someRandomBookId');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toEqual('Something went wrong');
       }
     });
   });
@@ -257,6 +261,20 @@ describe('BooksController', () => {
         expect(error.message).toEqual('Book not found');
       }
     });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'update')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+      try {
+        await controller.update('someRandomBookId', updateBookDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toEqual('Something went wrong');
+      }
+    });
   });
 
   describe('remove', () => {
@@ -271,13 +289,25 @@ describe('BooksController', () => {
 
     it('should throw an error if no book is found', async () => {
       try {
-        jest
-          .spyOn(service, 'remove')
-          .mockRejectedValue(new NotFoundException('Book not found'));
+        jest.spyOn(service, 'remove').mockResolvedValue(null);
         await controller.remove('someRandomBookId');
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
         expect(error.message).toEqual('Book not found');
+      }
+    });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'remove')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+      try {
+        await controller.remove('someRandomBookId');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toEqual('Something went wrong');
       }
     });
   });

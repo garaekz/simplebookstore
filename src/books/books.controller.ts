@@ -50,9 +50,6 @@ export class BooksController {
         data: books,
       };
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
       throw new InternalServerErrorException('Something went wrong');
     }
   }
@@ -92,7 +89,6 @@ export class BooksController {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      console.error(error);
       throw new InternalServerErrorException('Something went wrong');
     }
   }
@@ -115,7 +111,6 @@ export class BooksController {
       if (error instanceof NotFoundException) {
         throw error;
       }
-
       throw new InternalServerErrorException('Something went wrong');
     }
   }
