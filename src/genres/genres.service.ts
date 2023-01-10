@@ -36,10 +36,10 @@ export class GenresService {
     id: string,
     updateGenreDto: UpdateGenreDto,
   ): Promise<GenreDocument> {
-    return await this.genreModel.findByIdAndUpdate(id, updateGenreDto);
+    return await this.genreModel.findByIdAndUpdate(id, updateGenreDto).exec();
   }
 
   async remove(id: string): Promise<GenreDocument> {
-    return await this.genreModel.findByIdAndDelete(id);
+    return await this.genreModel.findByIdAndDelete(id).exec();
   }
 }

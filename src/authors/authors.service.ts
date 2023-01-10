@@ -36,10 +36,10 @@ export class AuthorsService {
     id: string,
     updateAuthorDto: UpdateAuthorDto,
   ): Promise<AuthorDocument> {
-    return await this.authorModel.findByIdAndUpdate(id, updateAuthorDto);
+    return await this.authorModel.findByIdAndUpdate(id, updateAuthorDto).exec();
   }
 
-  async remove(id: string) {
-    return await this.authorModel.findByIdAndDelete(id);
+  async remove(id: string): Promise<AuthorDocument> {
+    return await this.authorModel.findByIdAndDelete(id).exec();
   }
 }

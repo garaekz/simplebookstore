@@ -19,23 +19,28 @@ export class BooksService {
   ) {}
 
   async create(createBookDto: CreateBookDto): Promise<BookDocument> {
-    const authors = await this.authorsService.findByIds(createBookDto.authors);
-    const genres = await this.genresService.findByIds(createBookDto.genres);
+    try {
+      const authors = await this.authorsService.findByIds(
+        createBookDto.authors,
+      );
+      const genres = await this.genresService.findByIds(createBookDto.genres);
 
-    if (!authors || authors.length !== createBookDto.authors.length) {
-      throw new BadRequestException('One or more authors are invalid');
+      if (!authors || authors.length !== createBookDto.authors.length) {
+        throw new BadRequestException('One or more authors are invalid');
+      }
+
+      if (!genres || genres.length !== createBookDto.genres.length) {
+        throw new BadRequestException('One or more genres are invalid');
+      }
+
+      return await this.bookModel.create({
+        ...createBookDto,
+        authors,
+        genres,
+      });
+    } catch (error) {
+      throw error;
     }
-
-    if (!genres || genres.length !== createBookDto.genres.length) {
-      throw new BadRequestException('One or more genres are invalid');
-    }
-
-    const book = await this.bookModel.create({
-      ...createBookDto,
-      authors,
-      genres,
-    });
-    return book;
   }
 
   async findAll(): Promise<BookDocument[]> {
@@ -43,21 +48,18 @@ export class BooksService {
   }
 
   async findOneByTitle(title: string): Promise<BookDocument> {
-    return await this.bookModel.findOne({ title });
+    return await this.bookModel.findOne({ title }).exec();
   }
 
   async findOneById(id: string): Promise<BookDocument> {
     if (!id || !ObjectId.isValid(id)) {
-      throw new NotFoundException('Book not found');
+      throw new BadRequestException('The provided ID is invalid');
     }
+    const book = await this.bookModel.findById(id).exec();
 
-    const book = await this.bookModel.findById(id);
-
-    // I should find a way to not repeat this exception
     if (!book) {
       throw new NotFoundException('Book not found');
     }
-
     return book;
   }
 
@@ -65,12 +67,14 @@ export class BooksService {
     id: string,
     updateBookDto: UpdateBookDto,
   ): Promise<BookDocument> {
-    return await this.bookModel.findByIdAndUpdate(id, updateBookDto, {
-      new: true,
-    });
+    return await this.bookModel
+      .findByIdAndUpdate(id, updateBookDto, {
+        new: true,
+      })
+      .exec();
   }
 
   async remove(id: string): Promise<BookDocument> {
-    return await this.bookModel.findByIdAndDelete(id);
+    return await this.bookModel.findByIdAndDelete(id).exec();
   }
 }

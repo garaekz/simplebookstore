@@ -1,4 +1,8 @@
-import { BadRequestException } from '@nestjs/common/exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   Controller,
   Get,
@@ -39,12 +43,33 @@ export class AuthorsController {
 
   @Get()
   async findAll() {
-    return this.authorsService.findAll();
+    try {
+      const authors = await this.authorsService.findAll();
+      return {
+        statusCode: 200,
+        message: 'Authors retrieved successfully',
+        data: authors,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.authorsService.findOne(id);
+    try {
+      const book = await this.authorsService.findOne(id);
+      return {
+        statusCode: 200,
+        message: 'Author retrieved successfully',
+        data: book,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Patch(':id')
@@ -52,11 +77,45 @@ export class AuthorsController {
     @Param('id') id: string,
     @Body() updateAuthorDto: UpdateAuthorDto,
   ) {
-    return this.authorsService.update(id, updateAuthorDto);
+    try {
+      const author = await this.authorsService.update(id, updateAuthorDto);
+
+      if (!author) {
+        throw new NotFoundException('Author not found');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Author updated successfully',
+        data: author,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.authorsService.remove(id);
+    try {
+      const author = await this.authorsService.remove(id);
+
+      if (!author) {
+        throw new NotFoundException('Author not found');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Author deleted successfully',
+        data: author,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 }

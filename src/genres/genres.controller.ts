@@ -10,7 +10,11 @@ import {
 import { GenresService } from './genres.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
-import { BadRequestException } from '@nestjs/common/exceptions';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Controller('genres')
 export class GenresController {
@@ -39,12 +43,33 @@ export class GenresController {
 
   @Get()
   async findAll() {
-    return this.genresService.findAll();
+    try {
+      const authors = await this.genresService.findAll();
+      return {
+        statusCode: 200,
+        message: 'Genres retrieved successfully',
+        data: authors,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.genresService.findOne(id);
+    try {
+      const book = await this.genresService.findOne(id);
+      return {
+        statusCode: 200,
+        message: 'Genre retrieved successfully',
+        data: book,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Patch(':id')
@@ -52,11 +77,45 @@ export class GenresController {
     @Param('id') id: string,
     @Body() updateGenreDto: UpdateGenreDto,
   ) {
-    return this.genresService.update(id, updateGenreDto);
+    try {
+      const author = await this.genresService.update(id, updateGenreDto);
+
+      if (!author) {
+        throw new NotFoundException('Genre not found');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Genre updated successfully',
+        data: author,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.genresService.remove(id);
+    try {
+      const author = await this.genresService.remove(id);
+
+      if (!author) {
+        throw new NotFoundException('Genre not found');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Genre deleted successfully',
+        data: author,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Something went wrong');
+    }
   }
 }
