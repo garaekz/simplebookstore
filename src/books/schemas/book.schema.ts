@@ -4,10 +4,13 @@ import { Genre } from 'src/genres/schemas/genre.schema';
 
 export type BookDocument = Book & Document;
 
-@Schema()
+@Schema({ timestamps: true })
 export class Book {
   @Prop()
   title: string;
+
+  @Prop()
+  slug: string;
 
   @Prop()
   description: string;

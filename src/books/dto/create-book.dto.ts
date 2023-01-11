@@ -7,6 +7,10 @@ export class CreateBookDto {
 
   @IsString()
   @IsNotEmpty()
+  slug: string;
+
+  @IsString()
+  @IsNotEmpty()
   description: string;
 
   @IsString({ each: true })
