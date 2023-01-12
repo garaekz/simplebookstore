@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { Author, AuthorDocument } from './schemas/author.schema';
+import { ObjectId } from 'mongodb';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class AuthorsService {
@@ -20,8 +22,16 @@ export class AuthorsService {
     return await this.authorModel.find().exec();
   }
 
-  async findOne(id: string): Promise<AuthorDocument> {
-    return await this.authorModel.findById(id).exec();
+  async findOneById(id: string): Promise<AuthorDocument> {
+    if (!id || !ObjectId.isValid(id)) {
+      throw new BadRequestException('The provided ID is invalid');
+    }
+    const author = await this.authorModel.findById(id).exec();
+
+    if (!author) {
+      throw new NotFoundException('Author not found');
+    }
+    return author;
   }
 
   async findOneByName(name: string): Promise<AuthorDocument> {

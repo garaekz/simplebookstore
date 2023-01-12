@@ -190,7 +190,7 @@ describe('BooksController', () => {
     });
   });
 
-  describe('findOne', () => {
+  describe('findOneById', () => {
     it('should return a book', async () => {
       const book = {
         ...createBookDto,

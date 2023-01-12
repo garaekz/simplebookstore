@@ -58,6 +58,7 @@ describe('BooksService', () => {
             deleteOne: jest.fn(),
             findByIdAndUpdate: jest.fn(),
             findByIdAndDelete: jest.fn(),
+            exists: jest.fn(),
             exec: jest.fn(),
           },
         },
@@ -88,16 +89,20 @@ describe('BooksService', () => {
       jest
         .spyOn(genresService, 'findByIds')
         .mockResolvedValue([{} as GenreDocument]);
+      jest.spyOn(model, 'exists').mockResolvedValue(null);
       jest.spyOn(model, 'create').mockReturnValue({
         ...newBook,
+        slug: 'the-lord-of-the-rings',
         _id: 'randomId',
       } as any);
       const book = await service.create(createBookDto);
-      expect(model.create).toHaveBeenCalledWith(newBook);
+      expect(model.create).toHaveBeenCalledWith({
+        ...newBook,
+        slug: 'the-lord-of-the-rings',
+      });
       expect(book).toEqual({
-        ...createBookDto,
-        authors: [{} as AuthorDocument],
-        genres: [{} as GenreDocument],
+        ...newBook,
+        slug: 'the-lord-of-the-rings',
         _id: 'randomId',
       });
     });

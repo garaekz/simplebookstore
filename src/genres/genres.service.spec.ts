@@ -75,6 +75,27 @@ describe('GenresService', () => {
     });
   });
 
+  describe('findOneByName', () => {
+    it('should return a genre', async () => {
+      jest.spyOn(model, 'findOne').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(newGenre),
+      } as any);
+
+      expect(await service.findOneByName(newGenre.name)).toEqual(newGenre);
+    });
+  });
+
+  describe('findByIds', () => {
+    it('should return an array of genres', async () => {
+      const genres = [newGenre];
+      jest.spyOn(model, 'find').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(genres),
+      } as any);
+
+      expect(await service.findByIds([newGenre._id])).toEqual(genres);
+    });
+  });
+
   describe('update', () => {
     it('should update a genre', async () => {
       const updateGenreDto: UpdateGenreDto = {

@@ -8,6 +8,7 @@ import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { Book, BookDocument } from './schemas/book.schema';
 import { ObjectId } from 'mongodb';
+import { generateUniqueSlug } from '../utils/generate-unique-slug';
 
 @Injectable()
 export class BooksService {
@@ -32,6 +33,11 @@ export class BooksService {
       if (!genres || genres.length !== createBookDto.genres.length) {
         throw new BadRequestException('One or more genres are invalid');
       }
+
+      createBookDto.slug = await generateUniqueSlug(
+        this.bookModel,
+        createBookDto.title,
+      );
 
       return await this.bookModel.create({
         ...createBookDto,

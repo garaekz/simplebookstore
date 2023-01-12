@@ -78,16 +78,16 @@ export class GenresController {
     @Body() updateGenreDto: UpdateGenreDto,
   ) {
     try {
-      const author = await this.genresService.update(id, updateGenreDto);
+      const genre = await this.genresService.update(id, updateGenreDto);
 
-      if (!author) {
+      if (!genre) {
         throw new NotFoundException('Genre not found');
       }
 
       return {
         statusCode: 200,
         message: 'Genre updated successfully',
-        data: author,
+        data: genre,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {
@@ -100,16 +100,16 @@ export class GenresController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      const author = await this.genresService.remove(id);
+      const genre = await this.genresService.remove(id);
 
-      if (!author) {
+      if (!genre) {
         throw new NotFoundException('Genre not found');
       }
 
       return {
         statusCode: 200,
         message: 'Genre deleted successfully',
-        data: author,
+        data: genre,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {

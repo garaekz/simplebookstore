@@ -1,3 +1,4 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
@@ -69,18 +70,46 @@ describe('AuthorsService', () => {
     });
   });
 
-  describe('findOne', () => {
+  describe('findOneById', () => {
     it('should return an author', async () => {
       const author = {
         title: 'The Lord of the Rings',
-        _id: 'randomId',
+        _id: '5e9aa6b567e95d9d9c9b7a7b',
       };
 
       jest.spyOn(model, 'findById').mockReturnValue({
         exec: jest.fn().mockResolvedValue(author),
       } as any);
 
-      expect(await service.findOne('randomId')).toEqual(author);
+      expect(await service.findOneById('5e9aa6b567e95d9d9c9b7a7b')).toEqual(
+        author,
+      );
+    });
+
+    it('should throw an error when ID is invalid', async () => {
+      jest.spyOn(model, 'findById').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
+
+      try {
+        await service.findOneById('badId');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestException);
+        expect(error.message).toEqual('The provided ID is invalid');
+      }
+    });
+
+    it('should throw an error when author is not found', async () => {
+      jest.spyOn(model, 'findById').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      } as any);
+
+      try {
+        await service.findOneById('5e9aa6b567e95d9d9c9b7a7b');
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toEqual('Author not found');
+      }
     });
   });
 

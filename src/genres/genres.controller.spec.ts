@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { GenresController } from './genres.controller';
 import { GenresService } from './genres.service';
@@ -52,8 +56,8 @@ describe('GenresController', () => {
 
     it('should throw an error if the genre already exists', async () => {
       jest
-        .spyOn(service, 'create')
-        .mockRejectedValue(new BadRequestException('Genre already exists'));
+        .spyOn(service, 'findOneByName')
+        .mockResolvedValue({} as GenreDocument);
 
       try {
         await controller.create(createGenreDto);
@@ -84,6 +88,21 @@ describe('GenresController', () => {
         data: [],
       });
     });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'findAll')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+
+      try {
+        await controller.findAll();
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toBe('Something went wrong');
+      }
+    });
   });
 
   describe('findOne', () => {
@@ -109,6 +128,21 @@ describe('GenresController', () => {
         expect(error.message).toBe('Genre not found');
       }
     });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'findOne')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+
+      try {
+        await controller.findOne('1');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toBe('Something went wrong');
+      }
+    });
   });
 
   describe('update', () => {
@@ -123,15 +157,28 @@ describe('GenresController', () => {
     });
 
     it('should throw an error if the genre is not found', async () => {
-      jest
-        .spyOn(service, 'update')
-        .mockRejectedValue(new NotFoundException('Genre not found'));
+      jest.spyOn(service, 'update').mockResolvedValue(null);
 
       try {
         await controller.update('1', createGenreDto);
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
         expect(error.message).toBe('Genre not found');
+      }
+    });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'update')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+
+      try {
+        await controller.update('1', createGenreDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toBe('Something went wrong');
       }
     });
   });
@@ -148,15 +195,28 @@ describe('GenresController', () => {
     });
 
     it('should throw an error if the genre is not found', async () => {
-      jest
-        .spyOn(service, 'remove')
-        .mockRejectedValue(new NotFoundException('Genre not found'));
+      jest.spyOn(service, 'remove').mockResolvedValue(null);
 
       try {
         await controller.remove('1');
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
         expect(error.message).toBe('Genre not found');
+      }
+    });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'remove')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+
+      try {
+        await controller.remove('1');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toBe('Something went wrong');
       }
     });
   });

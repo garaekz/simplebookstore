@@ -58,14 +58,17 @@ export class AuthorsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
-      const book = await this.authorsService.findOne(id);
+      const book = await this.authorsService.findOneById(id);
       return {
         statusCode: 200,
         message: 'Author retrieved successfully',
         data: book,
       };
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
       throw new InternalServerErrorException('Something went wrong');

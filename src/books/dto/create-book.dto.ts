@@ -5,9 +5,9 @@ export class CreateBookDto {
   @IsNotEmpty()
   title: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  slug: string;
+  slug?: string;
 
   @IsString()
   @IsNotEmpty()
