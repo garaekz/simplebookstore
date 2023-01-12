@@ -54,6 +54,20 @@ export class BooksController {
     }
   }
 
+  @Get('featured')
+  async findFeatured() {
+    try {
+      const books = await this.booksService.findFeatured('rating');
+      return {
+        statusCode: 200,
+        message: 'Books retrieved successfully',
+        data: books,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {

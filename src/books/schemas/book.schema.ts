@@ -13,6 +13,12 @@ export class Book {
   slug: string;
 
   @Prop()
+  saga?: string;
+
+  @Prop()
+  sagaNumber?: number;
+
+  @Prop()
   description: string;
 
   @Prop()
@@ -25,10 +31,13 @@ export class Book {
   published: Date;
 
   @Prop()
-  rating: number;
+  rating?: number;
 
   @Prop()
   price: number;
+
+  @Prop()
+  discountedPrice?: number;
 
   @Prop()
   cover: string;

@@ -9,6 +9,14 @@ export class CreateBookDto {
   @IsString()
   slug?: string;
 
+  @IsOptional()
+  @IsString()
+  saga?: string;
+
+  @IsOptional()
+  @IsNumber()
+  sagaNumber?: number;
+
   @IsString()
   @IsNotEmpty()
   description: string;

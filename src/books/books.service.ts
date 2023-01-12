@@ -9,6 +9,24 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { Book, BookDocument } from './schemas/book.schema';
 import { ObjectId } from 'mongodb';
 import { generateUniqueSlug } from '../utils/generate-unique-slug';
+import { AuthorDocument } from '../authors/schemas/author.schema';
+import { GenreDocument } from '../genres/schemas/genre.schema';
+
+interface NewBook {
+  title: string;
+  slug: string;
+  saga?: string;
+  sagaNumber?: number;
+  description: string;
+  authors: AuthorDocument[];
+  genres: GenreDocument[];
+  published: Date;
+  rating: number;
+  price: number;
+  cover: string;
+  discount?: number;
+  discountedPrice?: number;
+}
 
 @Injectable()
 export class BooksService {
@@ -39,11 +57,19 @@ export class BooksService {
         createBookDto.title,
       );
 
-      return await this.bookModel.create({
+      const bookPayload = {
         ...createBookDto,
         authors,
         genres,
-      });
+      } as NewBook;
+
+      if (createBookDto.discount && createBookDto.discount > 0) {
+        bookPayload.discountedPrice =
+          createBookDto.price -
+          (createBookDto.price * createBookDto.discount) / 100;
+      }
+
+      return await this.bookModel.create(bookPayload);
     } catch (error) {
       throw error;
     }
@@ -51,6 +77,14 @@ export class BooksService {
 
   async findAll(): Promise<BookDocument[]> {
     return await this.bookModel.find().exec();
+  }
+
+  async findFeatured(field: string, limit = 5): Promise<Book[]> {
+    return this.bookModel
+      .find()
+      .sort({ [field]: -1 })
+      .limit(limit)
+      .exec();
   }
 
   async findOneByTitle(title: string): Promise<BookDocument> {
