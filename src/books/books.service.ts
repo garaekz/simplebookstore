@@ -11,6 +11,7 @@ import { ObjectId } from 'mongodb';
 import { generateUniqueSlug } from '../utils/generate-unique-slug';
 import { AuthorDocument } from '../authors/schemas/author.schema';
 import { GenreDocument } from '../genres/schemas/genre.schema';
+import { calculateDiscountedPrice, roundNum } from 'src/utils/math';
 
 interface NewBook {
   title: string;
@@ -64,9 +65,11 @@ export class BooksService {
       } as NewBook;
 
       if (createBookDto.discount && createBookDto.discount > 0) {
-        bookPayload.discountedPrice =
-          createBookDto.price -
-          (createBookDto.price * createBookDto.discount) / 100;
+        const discountedPrice = calculateDiscountedPrice(
+          createBookDto.price,
+          createBookDto.discount,
+        );
+        bookPayload.discountedPrice = roundNum(discountedPrice, 2);
       }
 
       return await this.bookModel.create(bookPayload);
