@@ -6,6 +6,9 @@ export type GenreDocument = Genre & Document;
 export class Genre {
   @Prop()
   name: string;
+
+  @Prop()
+  image: string;
 }
 
 export const GenreSchema = SchemaFactory.createForClass(Genre);

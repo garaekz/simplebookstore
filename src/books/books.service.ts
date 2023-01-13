@@ -9,25 +9,8 @@ import { UpdateBookDto } from './dto/update-book.dto';
 import { Book, BookDocument } from './schemas/book.schema';
 import { ObjectId } from 'mongodb';
 import { generateUniqueSlug } from '../utils/generate-unique-slug';
-import { AuthorDocument } from '../authors/schemas/author.schema';
-import { GenreDocument } from '../genres/schemas/genre.schema';
-import { calculateDiscountedPrice, roundNum } from 'src/utils/math';
-
-interface NewBook {
-  title: string;
-  slug: string;
-  saga?: string;
-  sagaNumber?: number;
-  description: string;
-  authors: AuthorDocument[];
-  genres: GenreDocument[];
-  published: Date;
-  rating: number;
-  price: number;
-  cover: string;
-  discount?: number;
-  discountedPrice?: number;
-}
+import { calculateDiscountedPrice, roundNum } from '../utils/math';
+import { CreateBookPayload, UpdateBookPayload } from '../types/book.types';
 
 @Injectable()
 export class BooksService {
@@ -62,7 +45,7 @@ export class BooksService {
         ...createBookDto,
         authors,
         genres,
-      } as NewBook;
+      } as CreateBookPayload;
 
       if (createBookDto.discount && createBookDto.discount > 0) {
         const discountedPrice = calculateDiscountedPrice(
@@ -110,11 +93,52 @@ export class BooksService {
     id: string,
     updateBookDto: UpdateBookDto,
   ): Promise<BookDocument> {
-    return await this.bookModel
-      .findByIdAndUpdate(id, updateBookDto, {
-        new: true,
-      })
-      .exec();
+    try {
+      if (!id || !ObjectId.isValid(id)) {
+        throw new BadRequestException('The provided ID is invalid');
+      }
+
+      const book = await this.bookModel.findById(id);
+      if (!book) {
+        throw new NotFoundException('Book not found');
+      }
+
+      const updatedBook = await this.bookModel.findByIdAndUpdate(
+        id,
+        updateBookDto,
+        { new: true },
+      );
+
+      if (updateBookDto.discount && updateBookDto.discount > 0) {
+        const discountedPrice = calculateDiscountedPrice(
+          updateBookDto.price,
+          updateBookDto.discount,
+        );
+        updatedBook.discountedPrice = roundNum(discountedPrice, 2);
+      }
+
+      if (updateBookDto.authors) {
+        const authors = await this.authorsService.findByIds(
+          updateBookDto.authors,
+        );
+        if (!authors) {
+          throw new BadRequestException('One or more authors are invalid');
+        }
+        updatedBook.authors = authors;
+      }
+
+      if (updateBookDto.genres) {
+        const genres = await this.genresService.findByIds(updateBookDto.genres);
+        if (!genres) {
+          throw new BadRequestException('One or more genres are invalid');
+        }
+        updatedBook.genres = genres;
+      }
+
+      return await updatedBook.save();
+    } catch (error) {
+      throw error;
+    }
   }
 
   async remove(id: string): Promise<BookDocument> {
