@@ -8,4 +8,8 @@ export class CreateGenreDto {
   @IsString()
   @IsNotEmpty()
   image: string;
+
+  @IsString()
+  @IsNotEmpty()
+  slug: string;
 }

@@ -11,6 +11,8 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -41,13 +43,26 @@ export class BooksController {
   }
 
   @Get()
-  async findAll() {
+  async findAll(
+    @Query('page', new DefaultValuePipe(1)) page: number,
+    @Query('genre') genre?: string,
+    @Query('author') author?: string,
+    @Query('search') search?: string,
+    @Query('sort') sort?: string,
+  ) {
     try {
-      const books = await this.booksService.findAll();
+      const { data, pagination } = await this.booksService.findAll(
+        page,
+        genre,
+        author,
+        search,
+        sort,
+      );
       return {
         statusCode: 200,
         message: 'Books retrieved successfully',
-        data: books,
+        data,
+        pagination,
       };
     } catch (error) {
       throw new InternalServerErrorException('Something went wrong');

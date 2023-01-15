@@ -9,6 +9,9 @@ export class Genre {
 
   @Prop()
   image: string;
+
+  @Prop()
+  slug: string;
 }
 
 export const GenreSchema = SchemaFactory.createForClass(Genre);

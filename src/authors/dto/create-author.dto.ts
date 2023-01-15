@@ -4,4 +4,8 @@ export class CreateAuthorDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  slug: string;
 }

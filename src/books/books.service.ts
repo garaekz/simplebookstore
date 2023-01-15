@@ -10,7 +10,7 @@ import { Book, BookDocument } from './schemas/book.schema';
 import { ObjectId } from 'mongodb';
 import { generateUniqueSlug } from '../utils/generate-unique-slug';
 import { calculateDiscountedPrice, roundNum } from '../utils/math';
-import { CreateBookPayload, UpdateBookPayload } from '../types/book.types';
+import { CreateBookPayload } from '../types/book.types';
 
 @Injectable()
 export class BooksService {
@@ -61,8 +61,69 @@ export class BooksService {
     }
   }
 
-  async findAll(): Promise<BookDocument[]> {
-    return await this.bookModel.find().exec();
+  async findAll(
+    page: number,
+    genre?: string,
+    author?: string,
+    search?: string,
+    sort?: string,
+  ): Promise<{
+    data: BookDocument[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalItems: number;
+      perPage: number;
+    };
+  }> {
+    const limit = 9;
+    const query = {};
+    if (genre) query['genres._id'] = new ObjectId(genre);
+    if (author) query['authors._id'] = new ObjectId(author);
+    if (search) query['title'] = { $regex: search, $options: 'i' };
+
+    let sortOrder;
+    switch (sort) {
+      case 'newest':
+        sortOrder = { createdAt: -1 };
+      case 'title':
+        sortOrder = { title: 1 };
+        break;
+      case 'pricehigh':
+        sortOrder = { price: -1 };
+        break;
+      case 'pricelow':
+        sortOrder = { price: 1 };
+        break;
+      case 'discount':
+        sortOrder = { discount: -1 };
+        break;
+      case 'rating':
+        sortOrder = { rating: -1 };
+        break;
+      case 'newPublished':
+        sortOrder = { published: -1 };
+        break;
+      default:
+        sortOrder = { createdAt: -1 };
+        break;
+    }
+    const books = await this.bookModel
+      .find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort(sortOrder);
+    const totalBooks = await this.bookModel.countDocuments(query);
+    const totalPages = Math.ceil(totalBooks / limit);
+    return {
+      data: books,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems: totalBooks,
+        perPage: limit,
+      },
+    };
   }
 
   async findFeatured(field: string, limit = 5): Promise<Book[]> {

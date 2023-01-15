@@ -6,6 +6,9 @@ export type AuthorDocument = Author & Document;
 export class Author {
   @Prop()
   name: string;
+
+  @Prop()
+  slug: string;
 }
 
 export const AuthorSchema = SchemaFactory.createForClass(Author);
