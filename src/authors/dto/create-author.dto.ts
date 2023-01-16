@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateAuthorDto {
   @IsString()
@@ -6,6 +6,6 @@ export class CreateAuthorDto {
   name: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   slug: string;
 }

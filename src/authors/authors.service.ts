@@ -6,6 +6,7 @@ import { UpdateAuthorDto } from './dto/update-author.dto';
 import { Author, AuthorDocument } from './schemas/author.schema';
 import { ObjectId } from 'mongodb';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { generateUniqueSlug } from '../utils/generate-unique-slug';
 
 @Injectable()
 export class AuthorsService {
@@ -15,7 +16,15 @@ export class AuthorsService {
   ) {}
 
   async create(createAuthorDto: CreateAuthorDto): Promise<AuthorDocument> {
-    return await this.authorModel.create(createAuthorDto);
+    try {
+      createAuthorDto.slug = await generateUniqueSlug(
+        this.authorModel,
+        createAuthorDto.name,
+      );
+      return await this.authorModel.create(createAuthorDto);
+    } catch (error) {
+      throw error;
+    }
   }
 
   async findAll(): Promise<AuthorDocument[]> {

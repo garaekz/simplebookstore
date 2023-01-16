@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { AuthorsService } from '../authors/authors.service';
 import { GenresService } from '../genres/genres.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -78,8 +78,8 @@ export class BooksService {
   }> {
     const limit = 9;
     const query = {};
-    if (genre) query['genres._id'] = new ObjectId(genre);
-    if (author) query['authors._id'] = new ObjectId(author);
+    if (genre) query['genres.slug'] = genre;
+    if (author) query['authors.slug'] = author;
     if (search) query['title'] = { $regex: search, $options: 'i' };
 
     let sortOrder;
@@ -108,11 +108,14 @@ export class BooksService {
         sortOrder = { createdAt: -1 };
         break;
     }
+
     const books = await this.bookModel
       .find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort(sortOrder);
+      .populate('authors genres')
+      .sort(sortOrder)
+      .exec();
     const totalBooks = await this.bookModel.countDocuments(query);
     const totalPages = Math.ceil(totalBooks / limit);
     return {
@@ -134,6 +137,22 @@ export class BooksService {
       .exec();
   }
 
+  async findRelatedBooks(bookId: string): Promise<Book[]> {
+    const book = await this.bookModel.findById(new ObjectId(bookId)).exec();
+    const authorsId = book.authors.map((author) => author._id);
+    const genresId = book.genres.map((genre) => genre._id);
+    const books = await this.bookModel
+      .find({
+        $or: [
+          { 'authors._id': { $in: authorsId } },
+          { 'genres._id': { $in: genresId } },
+        ],
+        _id: { $ne: bookId },
+      })
+      .limit(6);
+    return books;
+  }
+
   async findOneByTitle(title: string): Promise<BookDocument> {
     return await this.bookModel.findOne({ title }).exec();
   }
@@ -143,6 +162,15 @@ export class BooksService {
       throw new BadRequestException('The provided ID is invalid');
     }
     const book = await this.bookModel.findById(id).exec();
+
+    if (!book) {
+      throw new NotFoundException('Book not found');
+    }
+    return book;
+  }
+
+  async findOneBySlug(slug: string): Promise<BookDocument> {
+    const book = await this.bookModel.findOne({ slug }).exec();
 
     if (!book) {
       throw new NotFoundException('Book not found');

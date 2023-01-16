@@ -83,10 +83,10 @@ export class BooksController {
     }
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
+  @Get(':slug')
+  async findOne(@Param('slug') slug: string) {
     try {
-      const book = await this.booksService.findOneById(id);
+      const book = await this.booksService.findOneBySlug(slug);
       return {
         statusCode: 200,
         message: 'Book retrieved successfully',
@@ -96,6 +96,25 @@ export class BooksController {
       if (error instanceof NotFoundException) {
         throw error;
       }
+      throw new InternalServerErrorException('Something went wrong');
+    }
+  }
+
+  @Get(':id/related')
+  async findRelated(@Param('id') id: string) {
+    try {
+      const books = await this.booksService.findRelatedBooks(id);
+      return {
+        statusCode: 200,
+        message: 'Books retrieved successfully',
+        data: books,
+        total: books.length,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.log(error);
       throw new InternalServerErrorException('Something went wrong');
     }
   }

@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types, SchemaTypes } from 'mongoose';
 import { Author } from 'src/authors/schemas/author.schema';
 import { Genre } from 'src/genres/schemas/genre.schema';
 
@@ -7,6 +8,9 @@ export type BookDocument = Book & Document;
 @Schema({ timestamps: true })
 export class Book {
   @Prop()
+  _id: Types.ObjectId;
+
+  @Prop({ index: true })
   title: string;
 
   @Prop()
@@ -18,7 +22,7 @@ export class Book {
   @Prop()
   sagaNumber?: number;
 
-  @Prop()
+  @Prop({ index: 'text' })
   description: string;
 
   @Prop()
