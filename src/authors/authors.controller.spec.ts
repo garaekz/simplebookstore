@@ -10,6 +10,7 @@ import { AuthorsService } from './authors.service';
 
 const createAuthorDto = {
   name: 'J.R.R. Tolkien',
+  slug: 'j-r-r-tolkien',
 };
 
 describe('AuthorsController', () => {
@@ -64,6 +65,21 @@ describe('AuthorsController', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(BadRequestException);
         expect(error.message).toBe('Author already exists');
+      }
+    });
+
+    it('should throw an error if something went wrong', async () => {
+      jest
+        .spyOn(service, 'create')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+
+      try {
+        await controller.create(createAuthorDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toBe('Something went wrong');
       }
     });
   });

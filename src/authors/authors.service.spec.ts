@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
@@ -7,6 +11,7 @@ import { Author, AuthorDocument } from './schemas/author.schema';
 
 const createAuthorDto = {
   name: 'J.R.R. Tolkien',
+  slug: 'j-r-r-tolkien',
 };
 
 describe('AuthorsService', () => {
@@ -26,6 +31,7 @@ describe('AuthorsService', () => {
             findOne: jest.fn(),
             findByIdAndUpdate: jest.fn(),
             findByIdAndDelete: jest.fn(),
+            exists: jest.fn(),
             exec: jest.fn(),
           },
         },
@@ -50,6 +56,18 @@ describe('AuthorsService', () => {
       jest.spyOn(model, 'create').mockReturnValue(newAuthor as any);
 
       expect(await service.create(createAuthorDto)).toEqual(newAuthor);
+    });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest.spyOn(model, 'create').mockImplementation(() => {
+        throw new InternalServerErrorException('Something went wrong');
+      });
+
+      try {
+        await service.create(createAuthorDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+      }
     });
   });
 

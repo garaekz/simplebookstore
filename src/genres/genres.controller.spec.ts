@@ -4,13 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { CreateGenreDto } from './dto/create-genre.dto';
 import { GenresController } from './genres.controller';
 import { GenresService } from './genres.service';
 import { GenreDocument } from './schemas/genre.schema';
 
 const createGenreDto = {
   name: 'Fantasy',
-};
+  slug: 'fantasy',
+  image: 'fantasy.jpg',
+} as CreateGenreDto;
 
 describe('GenresController', () => {
   let controller: GenresController;

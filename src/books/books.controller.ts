@@ -111,10 +111,6 @@ export class BooksController {
         total: books.length,
       };
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      console.log(error);
       throw new InternalServerErrorException('Something went wrong');
     }
   }

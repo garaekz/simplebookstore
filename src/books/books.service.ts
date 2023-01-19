@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { AuthorsService } from '../authors/authors.service';
 import { GenresService } from '../genres/genres.service';
 import { CreateBookDto } from './dto/create-book.dto';

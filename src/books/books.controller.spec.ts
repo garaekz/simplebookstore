@@ -31,6 +31,23 @@ const updateBookDto = {
   discount: 10,
 } as UpdateBookDto;
 
+const book = {
+  ...createBookDto,
+  authors: [new Author()],
+  genres: [new Genre()],
+  discount: 0,
+} as BookDocument;
+
+const paginatedBooks = {
+  data: [book],
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 1,
+    perPage: 9,
+  },
+};
+
 describe('BooksController', () => {
   let controller: BooksController;
   let service: BooksService;
@@ -52,6 +69,9 @@ describe('BooksController', () => {
           provide: BooksService,
           useValue: {
             findOneByTitle: jest.fn(),
+            findOneBySlug: jest.fn(),
+            findFeatured: jest.fn(),
+            findRelatedBooks: jest.fn(),
             create: jest.fn(),
             findAll: jest.fn(),
             findOneById: jest.fn(),
@@ -81,12 +101,6 @@ describe('BooksController', () => {
 
   describe('create', () => {
     it('should create a book', async () => {
-      const book = {
-        ...createBookDto,
-        authors: [new Author()],
-        genres: [new Genre()],
-        discount: 0,
-      } as BookDocument;
       jest.spyOn(service, 'findOneByTitle').mockResolvedValue(null);
       jest.spyOn(service, 'create').mockResolvedValue(book);
       expect(await controller.create(createBookDto)).toEqual({
@@ -152,26 +166,21 @@ describe('BooksController', () => {
 
   describe('findAll', () => {
     it('should return an array of books', async () => {
-      const book = {
-        ...createBookDto,
-        authors: [new Author()],
-        genres: [new Genre()],
-        discount: 0,
-      } as BookDocument;
-      jest.spyOn(service, 'findAll').mockResolvedValue([book]);
-      expect(await controller.findAll()).toEqual({
+      jest.spyOn(service, 'findAll').mockResolvedValue(paginatedBooks);
+      expect(await controller.findAll(1)).toEqual({
         statusCode: 200,
         message: 'Books retrieved successfully',
-        data: [book],
+        ...paginatedBooks,
       });
     });
 
     it('should return an empty array if no books are found', async () => {
-      jest.spyOn(service, 'findAll').mockResolvedValue([]);
-      expect(await controller.findAll()).toEqual({
+      const emptyPaginatedBooks = { ...paginatedBooks, data: [] };
+      jest.spyOn(service, 'findAll').mockResolvedValue(emptyPaginatedBooks);
+      expect(await controller.findAll(1)).toEqual({
         statusCode: 200,
         message: 'Books retrieved successfully',
-        data: [],
+        ...emptyPaginatedBooks,
       });
     });
 
@@ -182,7 +191,7 @@ describe('BooksController', () => {
           new InternalServerErrorException('Something went wrong'),
         );
       try {
-        await controller.findAll();
+        await controller.findAll(1);
       } catch (error) {
         expect(error).toBeInstanceOf(InternalServerErrorException);
         expect(error.message).toEqual('Something went wrong');
@@ -190,7 +199,77 @@ describe('BooksController', () => {
     });
   });
 
-  describe('findOneById', () => {
+  describe('findFeatured', () => {
+    it('should return an array of featured books', async () => {
+      jest.spyOn(service, 'findFeatured').mockResolvedValue([book]);
+      expect(await controller.findFeatured()).toEqual({
+        statusCode: 200,
+        message: 'Books retrieved successfully',
+        data: [book],
+      });
+    });
+
+    it('should return an empty array if no featured books are found', async () => {
+      jest.spyOn(service, 'findFeatured').mockResolvedValue([]);
+      expect(await controller.findFeatured()).toEqual({
+        statusCode: 200,
+        message: 'Books retrieved successfully',
+        data: [],
+      });
+    });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'findFeatured')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+      try {
+        await controller.findFeatured();
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toEqual('Something went wrong');
+      }
+    });
+  });
+
+  describe('findRelated', () => {
+    it('should return an array of related books', async () => {
+      jest.spyOn(service, 'findRelatedBooks').mockResolvedValue([book]);
+      expect(await controller.findRelated('slug')).toEqual({
+        statusCode: 200,
+        message: 'Books retrieved successfully',
+        data: [book],
+        total: 1,
+      });
+    });
+
+    it('should return an empty array if no related books are found', async () => {
+      jest.spyOn(service, 'findRelatedBooks').mockResolvedValue([]);
+      expect(await controller.findRelated('slug')).toEqual({
+        statusCode: 200,
+        message: 'Books retrieved successfully',
+        data: [],
+        total: 0,
+      });
+    });
+
+    it('should throw an error if something goes wrong', async () => {
+      jest
+        .spyOn(service, 'findRelatedBooks')
+        .mockRejectedValue(
+          new InternalServerErrorException('Something went wrong'),
+        );
+      try {
+        await controller.findRelated('slug');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InternalServerErrorException);
+        expect(error.message).toEqual('Something went wrong');
+      }
+    });
+  });
+
+  describe('findOne', () => {
     it('should return a book', async () => {
       const book = {
         ...createBookDto,
@@ -198,8 +277,8 @@ describe('BooksController', () => {
         genres: [new Genre()],
         discount: 0,
       } as BookDocument;
-      jest.spyOn(service, 'findOneById').mockResolvedValue(book);
-      expect(await controller.findOne('aGoodBookId')).toEqual({
+      jest.spyOn(service, 'findOneBySlug').mockResolvedValue(book);
+      expect(await controller.findOne('slug')).toEqual({
         statusCode: 200,
         message: 'Book retrieved successfully',
         data: book,
@@ -208,10 +287,10 @@ describe('BooksController', () => {
 
     it('should throw an error if no book is found', async () => {
       jest
-        .spyOn(service, 'findOneById')
+        .spyOn(service, 'findOneBySlug')
         .mockRejectedValue(new NotFoundException('Book not found'));
       try {
-        await controller.findOne('someRandomBookId');
+        await controller.findOne('someRandomSlug');
       } catch (error) {
         expect(error).toBeInstanceOf(NotFoundException);
         expect(error.message).toEqual('Book not found');
@@ -220,12 +299,12 @@ describe('BooksController', () => {
 
     it('should throw an error if something goes wrong', async () => {
       jest
-        .spyOn(service, 'findOneById')
+        .spyOn(service, 'findOneBySlug')
         .mockRejectedValue(
           new InternalServerErrorException('Something went wrong'),
         );
       try {
-        await controller.findOne('someRandomBookId');
+        await controller.findOne('someRandomSlug');
       } catch (error) {
         expect(error).toBeInstanceOf(InternalServerErrorException);
         expect(error.message).toEqual('Something went wrong');

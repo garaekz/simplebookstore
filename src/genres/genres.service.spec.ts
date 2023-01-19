@@ -4,10 +4,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Model } from 'mongoose';
 import { GenresService } from './genres.service';
 import { Genre, GenreDocument } from './schemas/genre.schema';
+import { CreateGenreDto } from './dto/create-genre.dto';
 
 const createGenreDto = {
   name: 'Fantasy',
-};
+  slug: 'fantasy',
+  image: 'fantasy.jpg',
+} as CreateGenreDto;
 
 const newGenre = {
   ...createGenreDto,
