@@ -147,7 +147,7 @@ export class BooksService {
           { 'authors._id': { $in: authorsId } },
           { 'genres._id': { $in: genresId } },
         ],
-        _id: { $ne: bookId },
+        _id: { $ne: new ObjectId(bookId) },
       })
       .limit(6);
     return books;
